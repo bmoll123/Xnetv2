@@ -22,7 +22,7 @@ python train_glas_semi.py \
 ```
 
 ## Goal
-Model,Jaccard ↑,Dice ↑,ASD ↓,95HD ↓
+Model,Iou ↑,Dice ↑,ASD ↓,95HD ↓
 MT,76.41,86.62,2.65,13.28
 EM,76.81,86.88,2.54,12.28
 UAMT,76.55,86.72,2.73,13.43
