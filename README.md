@@ -15,7 +15,7 @@ pip install -r requirements.txt
 ```
 python train_glas_semi.py \
   --data_root ../Glas \
-  --portion unsegSplit10 \
+  --portion unsegSplit20 \
   --exp_name my_exp \
   -e 200 -b 2 --val_interval 1 \
   --confidence_threshold 0.5
