@@ -106,7 +106,7 @@ def parse_args():
 
     parser.add_argument(
         "--portion",
-        default="unsegSplit10",
+        default="unsegSplit20",
         choices=["10%", "20%", "unsegSplit10", "unsegSplit20"],
     )
     parser.add_argument(
@@ -148,16 +148,16 @@ def parse_args():
         default=20,
         type=int,
         help="for the first N epochs, train on labeled data only (no unsup forward/"
-             "backward at all); unsup consistency training starts at epoch N+1",
+        "backward at all); unsup consistency training starts at epoch N+1",
     )
     parser.add_argument(
         "--confidence_threshold",
         default=0.5,
         type=float,
         help="cross-branch pseudo labels are only kept where the providing branch's "
-             "softmax confidence >= this value (0.5 = no filtering, since argmax "
-             "confidence is always >= 0.5 for 2 classes); pixels below threshold are "
-             "excluded from the unsup loss via DiceLoss's ignore_index=-1",
+        "softmax confidence >= this value (0.5 = no filtering, since argmax "
+        "confidence is always >= 0.5 for 2 classes); pixels below threshold are "
+        "excluded from the unsup loss via DiceLoss's ignore_index=-1",
     )
     parser.add_argument("--loss", default="dice")
     parser.add_argument("-w", "--warm_up_duration", default=20, type=int)
@@ -711,7 +711,9 @@ def main():
         model.train()
 
         sup_only = epoch < args.sup_only_epochs
-        unsup_weight = 0.0 if sup_only else args.unsup_weight * (epoch + 1) / args.num_epochs
+        unsup_weight = (
+            0.0 if sup_only else args.unsup_weight * (epoch + 1) / args.num_epochs
+        )
 
         sums = {"sup1": 0.0, "sup2": 0.0, "sup3": 0.0, "unsup": 0.0, "total": 0.0}
         kept_fraction_sum = 0.0
@@ -749,9 +751,15 @@ def main():
                 H_u = unsup_batch["H"].to(device)
 
                 pred_u1, pred_u2, pred_u3 = model(img_u, L_u, H_u)
-                max_u1, keep_u1 = confident_pseudo_label(pred_u1, args.confidence_threshold)
-                max_u2, keep_u2 = confident_pseudo_label(pred_u2, args.confidence_threshold)
-                max_u3, keep_u3 = confident_pseudo_label(pred_u3, args.confidence_threshold)
+                max_u1, keep_u1 = confident_pseudo_label(
+                    pred_u1, args.confidence_threshold
+                )
+                max_u2, keep_u2 = confident_pseudo_label(
+                    pred_u2, args.confidence_threshold
+                )
+                max_u3, keep_u3 = confident_pseudo_label(
+                    pred_u3, args.confidence_threshold
+                )
                 loss_unsup = (
                     criterion(pred_u1, max_u2)
                     + criterion(pred_u2, max_u1)
@@ -815,7 +823,9 @@ def main():
         writer.add_scalar("Train/Loss_unsup", train_epoch_loss["unsup"], epoch + 1)
         writer.add_scalar("Train/Loss_total", train_epoch_loss["total"], epoch + 1)
         writer.add_scalar("Train/LR", optimizer.param_groups[0]["lr"], epoch + 1)
-        writer.add_scalar("Train/Unsup_confident_pixel_fraction", kept_fraction, epoch + 1)
+        writer.add_scalar(
+            "Train/Unsup_confident_pixel_fraction", kept_fraction, epoch + 1
+        )
 
         # Pseudo-label dump every epoch, using the unlabeled-training-as-eval split.
         # confidence_threshold is passed so the dump can gray out pixels that
